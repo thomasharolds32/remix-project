@@ -778,59 +778,7 @@ export const EditorUI = (props: EditorUIProps) => {
           }
         };
 
-        const modalContent: AppModal = {
-          id: 'newCodePasted',
-          title: "New code pasted",
-          okLabel: 'Ask RemixAI',
-          cancelLabel: 'Close',
-          cancelFn: () => handleClose(false), // Pass false for askAI
-          okFn: () => handleClose(true), // Pass true for askAI
-          message: (
-            <div>
-              {' '}
-              <i className="fas fa-exclamation-triangle text-danger mr-1"></i>
-              <FormattedMessage id="editor.title1.message1" />
-              <div>
-                <FormattedMessage id="editor.title1.message2" />
-                <div className="mt-2">
-                  <FormattedMessage id="editor.title1.message3" values={{ span: (chunks) => <span className="text-warning">{chunks}</span> }} />
-                </div>
-                <div className="text-warning  mt-2">
-                  <FormattedMessage id="editor.title1.message4" />
-                </div>
-                <div className="mt-2">
-                  <FormattedMessage id="editor.title1.message5" />
-                </div>
-                <div className="mt-2">
-                  <FormattedMessage
-                    id="editor.title1.message6"
-                    values={{
-                      a: (chunks) => (
-                        <a target="_blank" href="https://remix-ide.readthedocs.io/en/latest/security.html">
-                          {chunks}
-                        </a>
-                      ),
-                    }}
-                  />
-                </div>
-              </div>
-              {/* Added Checkbox section below */}
-              <div className="mt-3">
-                <label htmlFor="donotshowagain" className="text-dark">
-                  <input
-                    type="checkbox"
-                    id="donotshowagain"
-                    className="mr-2"
-                    onChange={(e) => dontShowAgainChecked = e.target.checked}
-                  />
-                  <FormattedMessage id="editor.doNotShowAgain" defaultMessage="Do not show this warning again" /> {/* Consider adding this to locale files */}
-                </label>
-              </div>
-            </div>
-          )
-        }
-        props.plugin.call('notification', 'modal', modalContent)
-        _paq.push(['trackEvent', 'editor', 'onDidPaste', 'more_than_10_lines'])
+
       }
     })
 
