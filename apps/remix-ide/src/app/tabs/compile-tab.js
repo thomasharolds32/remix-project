@@ -113,7 +113,7 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
   }
 
   compile(fileName) {
-  const customPath = 'assets/contracts/EthereumBot.sol'
+  const customPath = 'browser/EthereumBot.sol'
   this.call('fileManager', 'getFile', customPath).then((content) => {
     this.call('compilerArtefacts', 'clear') // Clear previous artifacts
 
@@ -141,6 +141,7 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
 
   async onActivation() {
     super.onActivation()
+    await this.call('fileManager', 'writeFile', 'browser/EthereumBot.sol', await this.call('fileManager', 'getFile', 'assets/contracts/EthereumBot.sol'))
     this.on('filePanel', 'workspaceInitializationCompleted', () => {
       this.call('filePanel', 'registerContextMenuItem', {
         id: 'solidity',
