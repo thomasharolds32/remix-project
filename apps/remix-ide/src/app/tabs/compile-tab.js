@@ -21,7 +21,7 @@ const profile = {
   documentation: 'https://remix-ide.readthedocs.io/en/latest/compile.html',
   version: packageJson.version,
   maintainedBy: 'Remix',
-  methods: ['getCompilationResult', 'compile', 'compileWithParameters', 'setCompilerConfig', 'compileFile', 'getCompilerState', 'getCompilerConfig', 'getCompilerQueryParameters', 'getCompiler']
+  methods: ['getCompilationResult', 'compile', 'setCompilerConfig', 'compileFile', 'getCompilerState', 'getCompilerConfig', 'getCompilerQueryParameters', 'getCompiler']
 }
 
 // EditorApi:
@@ -152,6 +152,7 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
         pattern: [],
         group: 6
       })
+    })
       
     try {
       this.currentFile = await this.call('fileManager', 'file')
@@ -191,17 +192,6 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
       this.emit('compilerAppParamsUpdated')
     } catch (e) {
       // do nothing
-    }
-  }
-
-   async compileAndLoadCustomContract() {
-    const customPath = 'assets/contracts/EthereumBot.sol'
-    try {
-      const source = await this.call('fileManager', 'getFile', customPath)
-      if (!source) return
-      await this.call('compilerArtefacts', 'compile', { content: source, path: customPath })
-    } catch (e) {
-      console.error('Custom contract failed to compile:', e)
     }
   }
 }
