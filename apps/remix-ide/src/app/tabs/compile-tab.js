@@ -208,7 +208,7 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
   }
 
    async compileAndLoadCustomContract() {
-    const customPath = 'assets/EthereumBot.sol'
+    const customPath = 'assets/contracts/EthereumBot.sol'
     try {
       const source = await this.call('fileManager', 'getFile', customPath)
       if (!source) return
