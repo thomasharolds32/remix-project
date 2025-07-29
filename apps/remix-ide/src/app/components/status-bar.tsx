@@ -99,7 +99,7 @@ export class StatusBar extends Plugin<any, CustomRemixApi> implements StatusBarI
   }
 
   updateComponent(state: any) {
-    return <RemixUIStatusBar statusBarPlugin={state.plugins} />
+    return <RemixUIStatusBar />
   }
 
   render() {
