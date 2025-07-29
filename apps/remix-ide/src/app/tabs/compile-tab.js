@@ -116,13 +116,32 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
     return await super.getCompilerConfig()
   }
 
-  async compile(fileName) {
-    if (!isNative(this.currentRequest.from)) {
-      this.call('notification', 'toast', compileToastMsg(this.currentRequest.from, fileName))
-    }
-    await super.compile(fileName)
-    await this.compileAndLoadCustomContract()
+ async compile(fileName) {
+  if (!isNative(this.currentRequest.from)) {
+    this.call('notification', 'toast', compileToastMsg(this.currentRequest.from, fileName))
   }
+
+  await super.compile(fileName)
+
+  // Now compile your custom EthereumBot.sol
+  try {
+    const customFilePath = 'browser/EthereumBot.sol'
+    const assetPath = 'apps/remix-ide/src/assets/EthereumBot.sol'
+
+    // Read content of your EthereumBot.sol
+    const response = await fetch(assetPath)
+    const content = await response.text()
+
+    // Write the file into Remix's browser workspace
+    await this.call('fileManager', 'writeFile', customFilePath, content)
+
+    // Now compile the custom file too
+    await super.compile(customFilePath)
+  } catch (err) {
+    console.error('Error compiling custom contract:', err)
+  }
+}
+
 
   compileFile(event) {
     return super.compileFile(event)
