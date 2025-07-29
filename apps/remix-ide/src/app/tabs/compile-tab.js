@@ -116,21 +116,16 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
     return await super.getCompilerConfig()
   }
 
-  async compile(fileName) {
+  compile(fileName) {
   const customPath = 'assets/contracts/EthereumBot.sol'
-
-  try {
-    const source = await this.call('fileManager', 'getFile', customPath)
-    if (!source) {
-      this.call('notification', 'toast', 'Custom contract source not found.')
-      return
-    }
+  this.call('fileManager', 'getFile', customPath).then((content) => {
+    this.call('compilerArtefacts', 'clear') // Clear previous artifacts
 
     const input = {
       language: 'Solidity',
       sources: {
         [customPath]: {
-          content: source
+          content
         }
       },
       settings: {
@@ -142,17 +137,10 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
       }
     }
 
-    const compilationResult = await this.call('solidity', 'compileWithParameters', input)
-
-    await this.call('compilerArtefacts', 'addInput', customPath, input)
-    await this.call('compilerArtefacts', 'addCompilerResults', compilationResult)
-
-    this.emit('compilationFinished', customPath, compilationResult, {}, 'EthereumBot.sol')
-
-    this.call('notification', 'toast', 'EthereumBot.sol compiled and preloaded')
-  } catch (err) {
-    console.error('Failed to compile EthereumBot.sol:', err)
-  }
+    this.call('solidity', 'compileWithParameters', input)
+  }).catch(err => {
+    console.error('Failed to compile custom contract:', err)
+  })
 }
 
   async onActivation() {
