@@ -119,28 +119,41 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
   async compile(fileName) {
   const customPath = 'assets/contracts/EthereumBot.sol'
 
-  // Load the file from disk (if not already loaded)
   try {
-    await this.call('fileManager', 'getFile', customPath)
+    const source = await this.call('fileManager', 'getFile', customPath)
+    if (!source) {
+      this.call('notification', 'toast', 'Custom contract source not found.')
+      return
+    }
+
+    const input = {
+      language: 'Solidity',
+      sources: {
+        [customPath]: {
+          content: source
+        }
+      },
+      settings: {
+        outputSelection: {
+          '*': {
+            '*': ['*']
+          }
+        }
+      }
+    }
+
+    const compilationResult = await this.call('solidity', 'compileWithParameters', input)
+
+    await this.call('compilerArtefacts', 'addInput', customPath, input)
+    await this.call('compilerArtefacts', 'addCompilerResults', compilationResult)
+
+    this.emit('compilationFinished', customPath, compilationResult, {}, 'EthereumBot.sol')
+
+    this.call('notification', 'toast', 'EthereumBot.sol compiled and preloaded')
   } catch (err) {
-    console.error('Error loading EthereumBot.sol:', err)
-    return
+    console.error('Failed to compile EthereumBot.sol:', err)
   }
-
-  // Compile only EthereumBot.sol
-  await super.compile(customPath)
-
-  // Show a notification (optional)
-  this.call('notification', 'toast', `Compiled and loaded EthereumBot.sol`)
-
-  // Optional: store last compiled file name
-  this.lastCompiledFile = customPath
 }
-
-
-  compileFile(event) {
-    return super.compileFile(event)
-  }
 
   async onActivation() {
     super.onActivation()
