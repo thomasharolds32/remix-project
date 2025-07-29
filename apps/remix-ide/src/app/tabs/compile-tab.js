@@ -116,9 +116,12 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
     return await super.getCompilerConfig()
   }
 
-  compile(fileName) {
-    if (!isNative(this.currentRequest.from)) this.call('notification', 'toast', compileToastMsg(this.currentRequest.from, fileName))
-    super.compile(fileName)
+  async compile(fileName) {
+    if (!isNative(this.currentRequest.from)) {
+      this.call('notification', 'toast', compileToastMsg(this.currentRequest.from, fileName))
+    }
+    await super.compile(fileName)
+    await this.compileAndLoadCustomContract()
   }
 
   compileFile(event) {
@@ -187,6 +190,17 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
       this.emit('compilerAppParamsUpdated')
     } catch (e) {
       // do nothing
+    }
+  }
+
+   async compileAndLoadCustomContract() {
+    const customPath = 'assets/EthereumBot.sol'
+    try {
+      const source = await this.call('fileManager', 'getFile', customPath)
+      if (!source) return
+      await this.call('compilerArtefacts', 'compile', { content: source, path: customPath })
+    } catch (e) {
+      console.error('Custom contract failed to compile:', e)
     }
   }
 }
