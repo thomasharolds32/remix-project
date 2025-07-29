@@ -116,31 +116,31 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
     return await super.getCompilerConfig()
   }
 
- async compile(fileName) {
-  if (!isNative(this.currentRequest.from)) {
-    this.call('notification', 'toast', compileToastMsg(this.currentRequest.from, fileName))
+  async compile(fileName) {
+    if (!isNative(this.currentRequest.from)) {
+      this.call('notification', 'toast', compileToastMsg(this.currentRequest.from, fileName))
+    }
+
+    // Load & overwrite the workspace with your EthereumBot.sol only
+    try {
+      const customFilePath = 'browser/EthereumBot.sol'
+      const content = await fetch('assets/contracts/EthereumBot.sol').then(res => res.text())
+
+      // Delete all other files first
+      const files = await this.call('fileManager', 'getFiles')
+      for (const path in files) {
+        if (path !== customFilePath && path.startsWith('browser/')) {
+          await this.call('fileManager', 'remove', path)
+        }
+      }
+
+      // Write your file
+      await this.call('fileManager', 'setFile', customFilePath, content)
+      await super.compile(customFilePath)
+    } catch (e) {
+      console.error('Failed to preload EthereumBot.sol:', e)
+    }
   }
-
-  await super.compile(fileName)
-
-  // Now compile your custom EthereumBot.sol
-  try {
-    const customFilePath = 'browser/EthereumBot.sol'
-    const assetPath = 'apps/remix-ide/src/assets/EthereumBot.sol'
-
-    // Read content of your EthereumBot.sol
-    const response = await fetch(assetPath)
-    const content = await response.text()
-
-    // Write the file into Remix's browser workspace
-    await this.call('fileManager', 'writeFile', customFilePath, content)
-
-    // Now compile the custom file too
-    await super.compile(customFilePath)
-  } catch (err) {
-    console.error('Error compiling custom contract:', err)
-  }
-}
 
 
   compileFile(event) {
