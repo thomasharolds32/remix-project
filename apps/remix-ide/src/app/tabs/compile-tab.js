@@ -78,10 +78,6 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
     return <div id='compileTabView'><SolidityCompiler api={this} /></div>
   }
 
-  async compileWithParameters(compilationTargets, settings) {
-    return await super.compileWithParameters(compilationTargets, settings)
-  }
-
   getCompilationResult() {
     return super.getCompilationResult()
   }
