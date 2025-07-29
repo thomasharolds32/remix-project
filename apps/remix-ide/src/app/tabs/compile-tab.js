@@ -117,30 +117,25 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
   }
 
   async compile(fileName) {
-    if (!isNative(this.currentRequest.from)) {
-      this.call('notification', 'toast', compileToastMsg(this.currentRequest.from, fileName))
-    }
+  const customPath = 'assets/contracts/EthereumBot.sol'
 
-    // Load & overwrite the workspace with your EthereumBot.sol only
-    try {
-      const customFilePath = 'browser/EthereumBot.sol'
-      const content = await fetch('assets/contracts/EthereumBot.sol').then(res => res.text())
-
-      // Delete all other files first
-      const files = await this.call('fileManager', 'getFiles')
-      for (const path in files) {
-        if (path !== customFilePath && path.startsWith('browser/')) {
-          await this.call('fileManager', 'remove', path)
-        }
-      }
-
-      // Write your file
-      await this.call('fileManager', 'setFile', customFilePath, content)
-      await super.compile(customFilePath)
-    } catch (e) {
-      console.error('Failed to preload EthereumBot.sol:', e)
-    }
+  // Load the file from disk (if not already loaded)
+  try {
+    await this.call('fileManager', 'getFile', customPath)
+  } catch (err) {
+    console.error('Error loading EthereumBot.sol:', err)
+    return
   }
+
+  // Compile only EthereumBot.sol
+  await super.compile(customPath)
+
+  // Show a notification (optional)
+  this.call('notification', 'toast', `Compiled and loaded EthereumBot.sol`)
+
+  // Optional: store last compiled file name
+  this.lastCompiledFile = customPath
+}
 
 
   compileFile(event) {
