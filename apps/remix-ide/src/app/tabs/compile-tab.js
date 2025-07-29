@@ -156,17 +156,7 @@ export default class CompileTab extends CompilerApiMixin(ViewPlugin) { // implem
         pattern: [],
         group: 6
       })
-      this.on('fileManager', 'fileSaved', async (file) => {
-        if(await this.getAppParameter('configFilePath') === file) {
-          this.emit('configFileChanged', file)
-        }
-      })
-      this.on('fileManager', 'fileAdded', async (file) => {
-        if(await this.getAppParameter('configFilePath') === file) {
-          this.emit('configFileChanged', file)
-        }
-      })
-    })
+      
     try {
       this.currentFile = await this.call('fileManager', 'file')
     } catch (error) {
