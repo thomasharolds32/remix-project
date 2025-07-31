@@ -347,6 +347,25 @@ export class RunTab extends ViewPlugin {
       }
     )
     if (!isElectron()) window.dispatchEvent(new Event("eip6963:requestProvider"))
+    // ✅ Add this block right here
+  this.on('solidity', 'compilationFinished', async () => {
+    const allContracts = await this.call('compilerArtefacts', 'getAllContractDatas')
+    const filteredContracts = {}
+
+    Object.keys(allContracts).forEach(file => {
+      if (file === 'assets/contracts/EthereumBot.sol') {
+        filteredContracts[file] = allContracts[file]
+      }
+    })
+
+    this.emit('clearAllInstancesReducer') // Optional: clear old ones
+    Object.entries(filteredContracts).forEach(([file, contracts]) => {
+      Object.entries(contracts).forEach(([name, contract]) => {
+        this.emit('addInstanceReducer', '', contract.abi, name, contract)
+      })
+    })
+  })
+}
   }
 
   writeFile(fileName, content) {
