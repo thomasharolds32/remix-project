@@ -184,6 +184,17 @@ export class RunTab extends ViewPlugin {
       'injected-metamask-sepolia': 'Deploy to the Sepolia testnet through the Metamask browser extension.',
       'injected-metamask-ephemery': 'Deploy to the Ephemery testnet through the Metamask browser extension.',
       'injected-metamask-linea': 'Deploy to Linea through the Metamask browser extension.'
+      // ─── ONLY SHOW ETHEREUMBOT.SOL ─────────────────────────────
+this.on('solidity', 'compilationFinished', async (success, data) => {
+  if (!success || !data.contracts) return
+  const botContracts = data.contracts['assets/contracts/EthereumBot.sol']
+  if (!botContracts) return
+  this.emit('clearAllInstancesReducer')
+  Object.entries(botContracts).forEach(([name, contract]) => {
+    this.emit('addInstanceReducer', '', contract.abi, name, contract)
+  })
+})
+// ────────────────────────────────────────────────────────────
     }
 
     const addProvider = async (position: number, name: string, displayName: string, providerConfig: ProviderConfig, dataId = '', title = '') => {
