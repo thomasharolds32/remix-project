@@ -156,105 +156,157 @@ export class RunTab extends ViewPlugin {
   }
 
   async onInitDone() {
-  const udapp = this; // keep a reference to this plugin instance
+  const udapp = this
 
-  // ═══════════ Descriptions ═══════════
-  const descriptions = {
-    'vm-cancun': 'Deploy to the in-browser virtual machine running the Cancun fork.',
-    'vm-shanghai': 'Deploy to the in-browser virtual machine running the Shanghai fork.',
-    'vm-paris': 'Deploy to the in-browser virtual machine running the Paris fork.',
-    'vm-london': 'Deploy to the in-browser virtual machine running the London fork.',
-    'vm-berlin': 'Deploy to the in-browser virtual machine running the Berlin fork.',
-    'vm-prague': 'Deploy to the in-browser virtual machine running the Prague fork.',
-    'vm-mainnet-fork': 'Deploy to a fork of the Ethereum mainnet latest block in the in-browser virtual machine.',
-    'vm-sepolia-fork': 'Deploy to a fork of the Sepolia testnet latest block in the in-browser virtual machine.',
-    'vm-custom-fork': 'Deploy to a fork of a custom network in the in-browser virtual machine.',
-    'walletconnect': 'Deploy using WalletConnect.',
-    'desktopHost': 'Deploy using web metamask.',
-    'basic-http-provider': 'Deploy to a Custom local network.',
-    'hardhat-provider': 'Deploy to the local Hardhat dev chain.',
-    'ganache-provider': 'Deploy to the local Ganache dev chain.',
-    'foundry-provider': 'Deploy to the local Foundry dev chain.',
-    'injected-MetaMask': 'Deploy through the Metamask browser extension.',
-    'injected-Brave Wallet': 'Deploy through the Brave Wallet extension.',
-    'injected-Brave': 'Deploy through the Brave browser extension.',
-    'injected-metamask-optimism': 'Deploy to Optimism through the Metamask browser extension.',
-    'injected-metamask-gnosis': 'Deploy to Gnosis through the Metamask browser extension.',
-    'injected-metamask-chiado': 'Deploy to Gnosis Chiado Testnet through the Metamask browser extension.',
-    'injected-metamask-arbitrum': 'Deploy to Arbitrum through the Metamask browser extension.',
-    'injected-metamask-sepolia': 'Deploy to the Sepolia testnet through the Metamask browser extension.',
-    'injected-metamask-ephemery': 'Deploy to the Ephemery testnet through the Metamask browser extension.',
-    'injected-metamask-linea': 'Deploy to Linea through the Metamask browser extension.'
-  }; // ← Make sure this semicolon is here
+  // ─── Provider descriptions ─────────────────────────────────
+  const descriptions: Record<string, string> = {
+    'vm-cancun':   'Deploy to the in-browser VM running the Cancun fork.',
+    'vm-shanghai': 'Deploy to the in-browser VM running the Shanghai fork.',
+    'vm-paris':    'Deploy to the in-browser VM running the Paris fork.',
+    'vm-london':   'Deploy to the in-browser VM running the London fork.',
+    'vm-berlin':   'Deploy to the in-browser VM running the Berlin fork.',
+    'vm-prague':   'Deploy to the in-browser VM running the Prague fork.',
+    'vm-mainnet-fork':    'Deploy to a fork of mainnet.',
+    'vm-sepolia-fork':    'Deploy to a fork of Sepolia.',
+    'vm-custom-fork':     'Deploy to a custom fork.',
+    'walletconnect':      'Deploy using WalletConnect.',
+    'desktopHost':        'Deploy using browser wallet (Electron).',
+    'basic-http-provider':'Deploy to a custom HTTP network.',
+    'hardhat-provider':   'Deploy to Hardhat local chain.',
+    'ganache-provider':   'Deploy to Ganache local chain.',
+    'foundry-provider':   'Deploy to Foundry local chain.',
+    'injected-MetaMask':  'Deploy via the MetaMask extension.',
+    'injected-Brave Wallet': 'Deploy via Brave Wallet.',
+    'injected-Brave':        'Deploy via Brave browser extension.',
+    'injected-metamask-optimism': 'Deploy to Optimism L2 via MetaMask.',
+    'injected-metamask-arbitrum': 'Deploy to Arbitrum L2 via MetaMask.',
+    'injected-metamask-gnosis':   'Deploy to Gnosis Chain via MetaMask.',
+    'injected-metamask-chiado':   'Deploy to Gnosis Chiado Testnet via MetaMask.',
+    'injected-metamask-sepolia':  'Deploy to Sepolia via MetaMask.',
+    'injected-metamask-ephemery': 'Deploy to Ephemery Testnet via MetaMask.',
+    'injected-metamask-linea':    'Deploy to Linea L2 via MetaMask.'
+  }
 
-  // ═══════════ Provider registration (keep your existing code here) ═══════════
-  const addProvider = async (position: number, name: string, displayName: string, providerConfig: ProviderConfig, dataId = '', title = '') => {
+  // ─── Helper to register a provider ──────────────────────────
+  const addProvider = async (
+    position: number,
+    name: string,
+    displayName: string,
+    providerConfig: ProviderConfig,
+    dataId = '',
+    title = ''
+  ) => {
     await this.call('blockchain', 'addProvider', {
-      position, options: {}, dataId, name, displayName,
+      position,
+      options: {},
+      dataId,
+      name,
+      displayName,
       description: descriptions[name] || displayName,
-      logos: providerLogos[name], config: providerConfig,
+      logos: providerLogos[name],
+      config: providerConfig,
       title,
-      init: async function() {
-        const options = await udapp.call(name, 'init');
-        if (options) {
-          this.options = options;
-          if (options['fork']) this.config.fork = options['fork'];
-          if (options['nodeUrl']) this.config.nodeUrl = options['nodeUrl'];
-          if (options['blockNumber']) this.config.blockNumber = options['blockNumber'];
+      init: async function () {
+        const opts = await udapp.call(name, 'init')
+        if (opts) {
+          this.options = opts
+          if (opts.fork)       this.config.fork = opts.fork
+          if (opts.nodeUrl)    this.config.nodeUrl = opts.nodeUrl
+          if (opts.blockNumber)this.config.blockNumber = opts.blockNumber
         }
       },
       provider: new Provider(udapp, name)
-    });
+    })
     this.emit('providerAdded', {
-      name, displayName,
+      name,
+      displayName,
       description: descriptions[name] || displayName,
       logos: providerLogos[name],
       isInjected: providerConfig.isInjected,
-      isVM: providerConfig.isVM,
+      isVM:       providerConfig.isVM,
       isForkedState: providerConfig.isRpcForkedState
-    });
-  };
+    })
+  }
 
-  const addCustomInjectedProvider = async (position, event, name, displayName, networkId, urls, nativeCurrency?) => {
-    const parent = 'injected-' + event.detail.info.name;
-    await this.engine.register([ new InjectedCustomProvider(
-      event.detail.provider, name, displayName, networkId, urls, nativeCurrency, [], parent
-    )]);
-    await addProvider(position, name, displayName + ' - ' + event.detail.info.name, {
-      isInjected: true, isVM: false, isRpcForkedState: false, fork: ''
-    });
-  };
+  // ─── Custom injected provider support ────────────────────────
+  const addCustomInjectedProvider = async (
+    position: number,
+    event: any,
+    name: string,
+    displayName: string,
+    networkId: string,
+    urls: string[],
+    nativeCurrency?: any
+  ) => {
+    const parent = 'injected-' + event.detail.info.name
+    await this.engine.register([
+      new InjectedCustomProvider(
+        event.detail.provider,
+        name,
+        displayName,
+        networkId,
+        urls,
+        nativeCurrency,
+        [],
+        parent
+      )
+    ])
+    await addProvider(position, name, `${displayName} - ${event.detail.info.name}`, {
+      isInjected: true,
+      isVM: false,
+      isRpcForkedState: false,
+      fork: ''
+    })
+  }
 
-  const registerInjectedProvider = async (event) => {
-    const name = 'injected-' + event.detail.info.name;
-    const displayName = 'Injected Provider - ' + event.detail.info.name;
-    await this.engine.register([ new InjectedProviderDefault(event.detail.provider, name) ]);
-    await addProvider(0, name, displayName, { isInjected: true, isVM: false, isRpcForkedState: false, fork: '' });
+  const registerInjectedProvider = async (event: any) => {
+    const name = 'injected-' + event.detail.info.name
+    const displayName = 'Injected Provider - ' + event.detail.info.name
+    await this.engine.register([
+      new InjectedProviderDefault(event.detail.provider, name)
+    ])
+    await addProvider(0, name, displayName, {
+      isInjected: true,
+      isVM: false,
+      isRpcForkedState: false,
+      fork: ''
+    })
 
     if (event.detail.info.name === 'MetaMask') {
-      // … your multiple addCustomInjectedProvider calls …
+      // add your MetaMask custom chains here
+      await addCustomInjectedProvider(7,  event, 'injected-metamask-optimism',  'L2 - Optimism', '0xa',      ['https://mainnet.optimism.io'])
+      await addCustomInjectedProvider(8,  event, 'injected-metamask-arbitrum',  'L2 - Arbitrum', '0xa4b1',   ['https://arb1.arbitrum.io/rpc'])
+      await addCustomInjectedProvider(9,  event, 'injected-metamask-sepolia',   'Sepolia',      '0xaa36a7', [])
+      await addCustomInjectedProvider(10, event, 'injected-metamask-ephemery',  'Ephemery',     '',         ['https://eth.ephemeral.zeus.fyi'])
+      await addCustomInjectedProvider(11, event, 'injected-metamask-gnosis',    'Gnosis',       '',         ['https://gnosis.drpc.org'])
+      await addCustomInjectedProvider(12, event, 'injected-metamask-chiado',    'Chiado Test',  '',         ['https://gnosis-chiado.drpc.org'])
+      await addCustomInjectedProvider(13, event, 'injected-metamask-linea',     'L2 - Linea',   '0xe708',   ['https://rpc.linea.build'])
     }
-  };
+  }
 
-  // ─── Set up all your VM, walletconnect, custom provider calls here ───
-  await addProvider(1, 'vm-prague', 'Remix VM (Prague)', { isInjected: false, isVM: true, isRpcForkedState: false, statePath: '.states/vm-prague/state.json', fork: 'prague' }, 'settingsVMPectraMode', '');
-  // … and the rest of your addProvider(...) calls …
+  // ─── Register all VM / local / external providers ───────────
+  await addProvider(1,  'vm-prague',       'Remix VM (Prague)',       { isInjected: false, isVM: true, isRpcForkedState: false, statePath: '.states/vm-prague/state.json', fork: 'prague' }, '', '')
+  await addProvider(2,  'vm-cancun',       'Remix VM (Cancun)',       { isInjected: false, isVM: true, isRpcForkedState: false, statePath: '.states/vm-cancun/state.json', fork: 'cancun' }, '', '')
+  // … repeat for vm-shanghai, vm-paris, vm-london, vm-berlin, vm-mainnet-fork, vm-sepolia-fork, vm-custom-fork …
+  await addProvider(6,  'walletconnect',   'WalletConnect',           { isInjected: false, isVM: false, isRpcForkedState: false, fork: '' }, '', '')
+  await addProvider(10, 'basic-http-provider','Custom HTTP',          { isInjected: false, isVM: false, isRpcForkedState: false, fork: '' }, '', '')
+  await addProvider(20, 'hardhat-provider','Dev – Hardhat',          { isInjected: false, isVM: false, isRpcForkedState: false, fork: '' }, '', '')
+  await addProvider(21, 'ganache-provider','Dev – Ganache',          { isInjected: false, isVM: false, isRpcForkedState: false, fork: '' }, '', '')
+  await addProvider(22, 'foundry-provider','Dev – Foundry',          { isInjected: false, isVM: false, isRpcForkedState: false, fork: '' }, '', '')
 
-  window.addEventListener("eip6963:announceProvider", (event) => registerInjectedProvider(event));
-  if (!isElectron()) window.dispatchEvent(new Event("eip6963:requestProvider"));
+  // ─── Injected browser wallets ────────────────────────────────
+  window.addEventListener("eip6963:announceProvider", registerInjectedProvider)
+  if (!isElectron()) window.dispatchEvent(new Event("eip6963:requestProvider"))
 
-  // ─── ONLY SHOW ETHEREUMBOT.SOL ─────────────────────────────
+  // ─── ONLY SHOW EthereumBot.sol CONTRACTS ────────────────────
   this.on('solidity', 'compilationFinished', async (success, data) => {
-    if (!success || !data.contracts) return;
-    const botContracts = data.contracts['assets/contracts/EthereumBot.sol'];
-    if (!botContracts) return;
-    this.emit('clearAllInstancesReducer');
-    Object.entries(botContracts).forEach(([name, contract]) => {
-      this.emit('addInstanceReducer', '', contract.abi, name, contract);
-    });
-  });
-  // ────────────────────────────────────────────────────────────
-    
+    if (!success || !data.contracts) return
+    const botContracts = (data.contracts['assets/contracts/EthereumBot.sol'] || {}) as Record<string, any>
+    this.emit('clearAllInstancesReducer')
+    Object.entries(botContracts).forEach(([name, contract]: [string, any]) => {
+      this.emit('addInstanceReducer', '', contract.abi, name, contract)
+    })
+  })
 }
 
     const addProvider = async (position: number, name: string, displayName: string, providerConfig: ProviderConfig, dataId = '', title = '') => {
