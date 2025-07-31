@@ -299,27 +299,31 @@ export class RunTab extends ViewPlugin {
   if (!isElectron()) window.dispatchEvent(new Event("eip6963:requestProvider"))
 
   // ─── ONLY SHOW ETHEREUMBOT.SOL ─────────────────────────────
-  this.on('solidity', 'compilationFinished', async (success, data) => {
-    if (!success || !data.contracts) return
-    const botContracts = data.contracts['assets/contracts/EthereumBot.sol']
-    if (!botContracts) return
+this.on('solidity', 'compilationFinished', async (success, data) => {
+  if (!success || !data.contracts) return
 
-    // wipe out any other instances that might already be shown
-    this.emit('clearAllInstancesReducer')
+  // find the contracts map whose file path ends with "EthereumBot.sol"
+  const botEntry = Object.entries(data.contracts)
+    .find(([filePath]) => filePath.endsWith('EthereumBot.sol'))
 
-    // add back just the contracts from EthereumBot.sol
-    Object.entries(botContracts).forEach(([name, contract]) => {
-      this.emit('addInstanceReducer',
-        /* address */    '',
-        /* abi */        (contract as any).abi,
-        /* name */       name,
-        /* full data */  contract
-      )
-    })
-  })
-  // ────────────────────────────────────────────────────────────
+  if (!botEntry) return
+  const [, botContracts] = botEntry
 
-  // … any other code you need in onInitDone() …
+  // clear out everything else in the UI
+  this.emit('clearAllInstancesReducer')
+
+  // re-add only your bot's ABIs
+  Object.entries(botContracts).forEach(([name, contract]) =>
+    this.emit(
+      'addInstanceReducer',
+      /* address */   '',
+      /* abi */       (contract as any).abi,
+      /* name */      name,
+      /* full data */ contract
+    )
+  )
+})
+// ────────────────────────────────────────────────────────────
 }
 
   writeFile(fileName, content) {
