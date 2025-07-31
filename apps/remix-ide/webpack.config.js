@@ -171,7 +171,6 @@ module.exports = composePlugins(withNx(), withReact(), (config) => {
     ignored: /node_modules/
   }
 
-  console.log('config', process.env.NX_DESKTOP_FROM_DIST)
   return config;
 });
 
