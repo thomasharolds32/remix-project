@@ -347,25 +347,33 @@ export class RunTab extends ViewPlugin {
       }
     )
     if (!isElectron()) window.dispatchEvent(new Event("eip6963:requestProvider"))
-    // ✅ Add this block right here
-  this.on('solidity', 'compilationFinished', async () => {
-    const allContracts = await this.call('compilerArtefacts', 'getAllContractDatas')
-    const filteredContracts = {}
+    this.plugin.call('solidity', 'getCompilationResult').then((result) => {
+  if (!result || !result.data || !result.data.contracts) return
+  const contracts = result.data.contracts
+  const filteredContracts = Object.entries(contracts).reduce((acc, [file, contractMap]) => {
+    if (file === 'assets/contracts/EthereumBot.sol') {
+      acc[file] = contractMap
+    }
+    return acc
+  }, {})
 
-    Object.keys(allContracts).forEach(file => {
-      if (file === 'assets/contracts/EthereumBot.sol') {
-        filteredContracts[file] = allContracts[file]
-      }
-    })
+  this.dispatch({
+    type: 'clearAllInstancesReducer'
+  })
 
-    this.emit('clearAllInstancesReducer') // Optional: clear old ones
-    Object.entries(filteredContracts).forEach(([file, contracts]) => {
-      Object.entries(contracts).forEach(([name, contract]) => {
-        this.emit('addInstanceReducer', '', contract.abi, name, contract)
+  Object.entries(filteredContracts).forEach(([file, contracts]) => {
+    Object.entries(contracts).forEach(([name, contract]) => {
+      this.dispatch({
+        type: 'addInstanceReducer',
+        payload: {
+          abi: contract.abi,
+          contractData: contract,
+          contractName: name
+        }
       })
     })
   })
-}
+})
   }
 
   writeFile(fileName, content) {
