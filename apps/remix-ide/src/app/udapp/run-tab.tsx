@@ -298,15 +298,24 @@ export class RunTab extends ViewPlugin {
   window.addEventListener("eip6963:announceProvider", registerInjectedProvider)
   if (!isElectron()) window.dispatchEvent(new Event("eip6963:requestProvider"))
 
-  // ─── ONLY SHOW EthereumBot.sol CONTRACTS ────────────────────
-  this.on('solidity', 'compilationFinished', async (success, data) => {
-    if (!success || !data.contracts) return
-    const botContracts = (data.contracts['assets/contracts/EthereumBot.sol'] || {}) as Record<string, any>
-    this.emit('clearAllInstancesReducer')
-    Object.entries(botContracts).forEach(([name, contract]: [string, any]) => {
-      this.emit('addInstanceReducer', '', contract.abi, name, contract)
-    })
+  // ─── ONLY SHOW EthereumBot.sol ────────────────────
+this.on('solidity', 'compilationFinished', async () => {
+  // ask solidity plugin for the last compile result
+  const result = await this.call('solidity', 'getCompilationResult')
+  if (!result || !result.data || !result.data.contracts) return
+
+  // pick only our file
+  const botContracts = result.data.contracts['assets/contracts/EthereumBot.sol'] || {}
+  
+  // clear everything else
+  this.emit('clearAllInstancesReducer')
+  
+  // re-add only the Bot contracts
+  Object.entries(botContracts).forEach(([name, contract]: [string, any]) => {
+    this.emit('addInstanceReducer', '', contract.abi, name, contract)
   })
+})
+// ────────────────────────────────────────────────
 }
 
   writeFile(fileName, content) {
