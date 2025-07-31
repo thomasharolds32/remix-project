@@ -323,15 +323,15 @@ this.on('solidity', 'compilationFinished', async (success, data) => {
 }
 }
 
-  writeFile(fileName, content) {
+  writeFile(fileName: string, content: string): Promise<any> {
     return this.call('fileManager', 'writeFile', fileName, content)
   }
 
-  readFile(fileName) {
+  readFile(fileName: string): Promise<any> {
     return this.call('fileManager', 'readFile', fileName)
   }
 
-  async resolveContractAndAddInstance(contractObject, address) {
+  async resolveContractAndAddInstance(contractObject: any, address: any): Promise<void> {
     const data = await this.compilersArtefacts.getCompilerAbstract(contractObject.contract.file)
 
     this.compilersArtefacts.addResolvedContract(addressToString(address), data)
