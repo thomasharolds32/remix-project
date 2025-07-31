@@ -303,7 +303,7 @@ this.on('solidity', 'compilationFinished', async () => {
   // pull _all_ compiled contracts from Remix's cache
   const allContracts = await this.compilersArtefacts.getAllContractDatas()
   // grab only your file
-  const botContracts = allContracts['assets/contracts/EthereumBot.sol']
+  const botContracts = allContracts['assets/contracts/EthereumBot.sol'] as Record<string, any>);
   if (!botContracts) return    // nothing to do if it's not there yet
 
   // wipe out any old instances in the UI
