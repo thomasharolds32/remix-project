@@ -347,33 +347,15 @@ export class RunTab extends ViewPlugin {
       }
     )
     if (!isElectron()) window.dispatchEvent(new Event("eip6963:requestProvider"))
-    this.plugin.call('solidity', 'getCompilationResult').then((result) => {
-  if (!result || !result.data || !result.data.contracts) return
-  const contracts = result.data.contracts
-  const filteredContracts = Object.entries(contracts).reduce((acc, [file, contractMap]) => {
-    if (file === 'assets/contracts/EthereumBot.sol') {
-      acc[file] = contractMap
-    }
-    return acc
-  }, {})
-
-  this.dispatch({
-    type: 'clearAllInstancesReducer'
-  })
-
-  Object.entries(filteredContracts).forEach(([file, contracts]) => {
-    Object.entries(contracts).forEach(([name, contract]) => {
-      this.dispatch({
-        type: 'addInstanceReducer',
-        payload: {
-          abi: contract.abi,
-          contractData: contract,
-          contractName: name
-        }
-      })
+    this.on('solidity', 'compilationFinished', async (success, data) => {
+    if (!success || !data.contracts) return
+    const botContracts = data.contracts['assets/contracts/EthereumBot.sol']
+    if (!botContracts) return
+    this.emit('clearAllInstancesReducer')
+    Object.entries(botContracts).forEach(([name, contract]) => {
+      this.emit('addInstanceReducer', '', contract.abi, name, contract)
     })
   })
-})
   }
 
   writeFile(fileName, content) {
