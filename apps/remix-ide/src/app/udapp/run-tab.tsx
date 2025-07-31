@@ -298,30 +298,27 @@ export class RunTab extends ViewPlugin {
   window.addEventListener("eip6963:announceProvider", registerInjectedProvider)
   if (!isElectron()) window.dispatchEvent(new Event("eip6963:requestProvider"))
 
-  // ─── ONLY SHOW ETHEREUMBOT.SOL ─────────────────────────────
-this.on('solidity', 'compilationFinished', async (success, data) => {
-  if (!success || !data.contracts) return
+  // ─── ALWAYS SHOW EthereumBot.sol ────────────────────────────
+this.on('solidity', 'compilationFinished', async () => {
+  // pull _all_ compiled contracts from Remix's cache
+  const allContracts = await this.compilersArtefacts.getAllContractDatas()
+  // grab only your file
+  const botContracts = allContracts['assets/contracts/EthereumBot.sol']
+  if (!botContracts) return    // nothing to do if it's not there yet
 
-  // find the contracts map whose file path ends with "EthereumBot.sol"
-  const botEntry = Object.entries(data.contracts)
-    .find(([filePath]) => filePath.endsWith('EthereumBot.sol'))
-
-  if (!botEntry) return
-  const [, botContracts] = botEntry
-
-  // clear out everything else in the UI
+  // wipe out any old instances in the UI
   this.emit('clearAllInstancesReducer')
 
-  // re-add only your bot's ABIs
-  Object.entries(botContracts).forEach(([name, contract]) =>
+  // re-add each of your contracts from EthereumBot.sol
+  Object.entries(botContracts).forEach(([name, contract]) => {
     this.emit(
       'addInstanceReducer',
-      /* address */   '',
-      /* abi */       (contract as any).abi,
-      /* name */      name,
+      /* address */ '',
+      contract.abi,
+      /* contract name */ name,
       /* full data */ contract
     )
-  )
+  })
 })
 // ────────────────────────────────────────────────────────────
 }
