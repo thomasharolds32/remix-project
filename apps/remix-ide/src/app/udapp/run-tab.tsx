@@ -298,16 +298,29 @@ export class RunTab extends ViewPlugin {
   window.addEventListener("eip6963:announceProvider", registerInjectedProvider)
   if (!isElectron()) window.dispatchEvent(new Event("eip6963:requestProvider"))
 
-  // ─── ONLY SHOW ETHEREUMBOT.SOL ─────────────────────────────
+  // remove any previous listener so we don’t double-fire
+this.off('solidity', 'compilationFinished')
+
+// ─── ONLY SHOW ETHEREUMBOT.SOL ─────────────────────────────
 this.on('solidity', 'compilationFinished', async (success, data) => {
-  if (!success || !data.contracts) return;
-  // 👉 cast to `any` so TypeScript knows `.abi` exists
-  const botContracts = (data.contracts['assets/contracts/EthereumBot.sol'] as Record<string, any>);
+  if (!success || !data.contracts) return
+
+  // grab only our bot file; cast to any so TS knows .abi exists
+  const botContracts = (data.contracts['assets/contracts/EthereumBot.sol'] ?? {}) as Record<
+    string,
+    { abi: any }
+  >
+
+  // clear out all existing instances
+  this.emit('clearAllInstancesReducer')
+
+  // re-add only contracts defined in EthereumBot.sol
   Object.entries(botContracts).forEach(([name, contract]) => {
-    this.emit('addInstanceReducer', '', contract.abi, name, contract);
-  });
-});
+    this.emit('addInstanceReducer', '', contract.abi, name, contract)
+  })
+})
 // ────────────────────────────────────────────────────────────
+}
 }
 
   writeFile(fileName, content) {
