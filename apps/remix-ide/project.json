@@ -10,6 +10,9 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "development",
       "options": {
+        "customWebpackConfig": {
+          "path": "apps/remix-ide/webpack.config.js"
+        },
         "compiler": "babel",
         "outputPath": "dist/apps/remix-ide",
         "index": "apps/remix-ide/src/index.html",
