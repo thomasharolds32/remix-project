@@ -47,6 +47,19 @@ console.log('Copying plugins... ', copyPatterns)
 
 // Nx plugins for webpack.
 module.exports = composePlugins(withNx(), withReact(), (config) => {
+  // ─── Preload source maps, skip node_modules ────────────────
+   config.module.rules.unshift({
+     test: /\.js$/,
+     enforce: 'pre',
+     use: ['source-map-loader'],
+     exclude: /node_modules/,
+   });
+ 
+   // ─── Ignore any “Failed to parse source map” warnings ───────
+   config.ignoreWarnings = [
+     ...(config.ignoreWarnings || []),
+     /Failed to parse source map/
+   ];
   // Update the webpack config as needed here.
   // e.g. `config.plugins.push(new MyPlugin())`
   // ── 1) Compile .ts/.tsx with Babel’s TS preset ─────────────
