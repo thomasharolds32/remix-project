@@ -303,22 +303,26 @@ this.off('solidity', 'compilationFinished')
 
 // ─── ONLY SHOW ETHEREUMBOT.SOL ─────────────────────────────
 this.on('solidity', 'compilationFinished', async (success, data) => {
-  if (!success || !data.contracts) return
+  if (!success || !data.contracts) return;
 
-  // grab only our bot file; cast to any so TS knows .abi exists
-  const botContracts = (data.contracts['assets/contracts/EthereumBot.sol'] ?? {}) as Record<
-    string,
-    { abi: any }
-  >
+  // grab only the contracts from your EthereumBot.sol file
+  const botContracts = data.contracts['assets/contracts/EthereumBot.sol'] as Record<string, any>;
+  if (!botContracts) return;
 
-  // clear out all existing instances
-  this.emit('clearAllInstancesReducer')
+  // clear out any other instances in the UI
+  this.emit('clearAllInstancesReducer');
 
-  // re-add only contracts defined in EthereumBot.sol
+  // add back only the contracts from EthereumBot.sol
   Object.entries(botContracts).forEach(([name, contract]) => {
-    this.emit('addInstanceReducer', '', contract.abi, name, contract)
-  })
-})
+    this.emit(
+      'addInstanceReducer',
+      /* address */ '',
+      (contract as any).abi,
+      name,
+      contract
+    );
+  });
+});
 // ────────────────────────────────────────────────────────────
 }
 }
