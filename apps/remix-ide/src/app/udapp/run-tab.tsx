@@ -301,16 +301,20 @@ export class RunTab extends ViewPlugin {
   // remove any previous listener so we don’t double-fire
 this.off('solidity', 'compilationFinished')
 
-// ─── ONLY SHOW ETHEREUMBOT.SOL ─────────────────────────────
-this.on('solidity', 'compilationFinished', async (success, data) => {
+// ─── ONLY SHOW ETHEREUMBOT.SOL ───────────────────────────────
+this.on('compilationFinished', (success, data) => {
   if (!success || !data.contracts) return;
 
   // grab only the contracts from your EthereumBot.sol file
   const botContracts = data.contracts['assets/contracts/EthereumBot.sol'] as Record<string, any>;
-  if (!botContracts) return;
+  if (!botContracts) {
+    // if for some reason it didn’t compile, clear everything
+    this.emit('clearAllInstances');
+    return;
+  }
 
   // clear out any other instances in the UI
-  this.emit('clearAllInstancesReducer');
+  this.emit('clearAllInstances');
 
   // add back only the contracts from EthereumBot.sol
   Object.entries(botContracts).forEach(([name, contract]) => {
@@ -323,7 +327,7 @@ this.on('solidity', 'compilationFinished', async (success, data) => {
     );
   });
 });
-// ────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 }
 }
 
