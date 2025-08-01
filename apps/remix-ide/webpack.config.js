@@ -49,6 +49,32 @@ console.log('Copying plugins... ', copyPatterns)
 module.exports = composePlugins(withNx(), withReact(), (config) => {
   // Update the webpack config as needed here.
   // e.g. `config.plugins.push(new MyPlugin())`
+  // ── 1) Compile .ts/.tsx with Babel’s TS preset ─────────────
+  config.module.rules.push({
+    test: /\.tsx?$/,
+    use: [{
+      loader: require.resolve('babel-loader'),
+      options: {
+        presets: [
+          require('@nrwl/web/src/utils/babel').default,
+          require.resolve('@babel/preset-typescript')
+        ],
+        plugins: [
+          // (keep any other Babel plugins you already have)
+        ]
+      }
+    }],
+    exclude: /node_modules/,
+  });
+
+  // ── 2) Resolve .ts/.tsx extensions ────────────────────────────
+  config.resolve.extensions.push('.ts', '.tsx');
+
+  // ── 3) Silence async_hooks warnings ───────────────────────────
+  config.resolve.fallback = {
+    ...(config.resolve.fallback || {}),
+    async_hooks: false,
+  };
 
   // add fallback for node modules
   config.resolve.fallback = {
