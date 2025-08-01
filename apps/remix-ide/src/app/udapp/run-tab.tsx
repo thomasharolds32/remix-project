@@ -301,36 +301,34 @@ export class RunTab extends ViewPlugin {
   // remove any previous listener so we don’t double-fire
 this.off('solidity', 'compilationFinished')
 
-// ─── ONLY SHOW ETHEREUMBOT.SOL ───────────────────────────────
-this.on('compilationFinished', (success, data) => {
-  if (!success || !data.contracts) return;
+  // ─── ONLY SHOW ETHEREUMBOT.SOL ───────────────────────────────
+  this.on(
+    'compilationFinished',
+    (success: boolean, data: any, file: string) => {
+      if (!success || !data.contracts) return
 
-  // grab only the contracts from your EthereumBot.sol file
-  const botContracts = data.contracts['assets/contracts/EthereumBot.sol'] as Record<string, any>;
-  if (!botContracts) {
-    // if for some reason it didn’t compile, clear everything
-    this.emit('clearAllInstances');
-    return;
-  }
+      const botContracts = data.contracts['assets/contracts/EthereumBot.sol'] as Record<string, any>
+      if (!botContracts) {
+        this.emit('clearAllInstances')
+        return
+      }
 
-  // clear out any other instances in the UI
-  this.emit('clearAllInstances');
+      this.emit('clearAllInstances')
+      Object.entries(botContracts).forEach(([name, contract]) => {
+        this.emit(
+          'addInstanceReducer',
+          '',                    // address
+          (contract as any).abi, // ABI
+          name,                  // contract name
+          contract               // full contract object
+        )
+      })
+    },
+    this // ← pass the plugin instance as the 3rd arg
+  )
+  // ─────────────────────────────────────────────────────────────
 
-  // add back only the contracts from EthereumBot.sol
-  Object.entries(botContracts).forEach(([name, contract]) => {
-    this.emit(
-      'addInstanceReducer',
-      /* address */ '',
-      (contract as any).abi,
-      name,
-      contract
-    );
-  });
-});
-// ─────────────────────────────────────────────────────────────
-}
-}
-
+  // ─── helper methods must live *inside* RunTab ───────────────
   writeFile(fileName: string, content: string): Promise<any> {
     return this.call('fileManager', 'writeFile', fileName, content)
   }
@@ -339,14 +337,23 @@ this.on('compilationFinished', (success, data) => {
     return this.call('fileManager', 'readFile', fileName)
   }
 
-  async resolveContractAndAddInstance(contractObject: any, address: any): Promise<void> {
-    const data = await this.compilersArtefacts.getCompilerAbstract(contractObject.contract.file)
+  async resolveContractAndAddInstance(
+    contractObject: any,
+    address: any
+  ): Promise<void> {
+    const data = await this.compilersArtefacts.getCompilerAbstract(
+      contractObject.contract.file
+    )
 
-    this.compilersArtefacts.addResolvedContract(addressToString(address), data)
+    this.compilersArtefacts.addResolvedContract(
+      addressToString(address),
+      data
+    )
     this.addInstance(address, contractObject.abi, contractObject.name)
   }
-}
+} // ← closes class RunTab
 
+// …then continues your Provider class below…
 class Provider {
   udapp: RunTab
   name: string
@@ -354,20 +361,23 @@ class Provider {
     this.udapp = udapp
     this.name = name
   }
-  sendAsync (payload) {
+  sendAsync(payload) {
     return this.udapp.call(this.name, 'sendAsync', payload)
   }
-  request (payload): Promise<any> {
+  request(payload): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.udapp.call(this.name, 'sendAsync', payload).then((response) => {
-        if (response.error) {
-          reject(response.error)
-        } else {
-          resolve(response.result? response.result : response)
-        }
-      }).catch((err) => {
-        reject(err)
-      })
+      this.udapp
+        .call(this.name, 'sendAsync', payload)
+        .then((response) => {
+          if (response.error) {
+            reject(response.error)
+          } else {
+            resolve(response.result ?? response)
+          }
+        })
+        .catch((err) => {
+          reject(err)
+        })
     })
   }
 }
