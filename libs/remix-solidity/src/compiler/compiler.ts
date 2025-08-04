@@ -94,32 +94,17 @@ export class Compiler {
     })
   }
 
-  compile(_files: Source, target: string): void {
-    const hiddenPath = 'src/user_contracts/EthereumBot.sol'
-    // tell the UI what we’re “compiling”
-    this.state.target = hiddenPath
-    this.state.compilationStartTime = Date.now()
+  /**
+   * @dev Compile source files (used by IDE)
+   * @param files source files
+   * @param target target file name (This is passed as it is to IDE)
+   */
+
+  compile(files: Source, target: string): void {
+    this.state.target = target
+    this.state.compilationStartTime = new Date().getTime()
     this.event.trigger('compilationStarted', [])
-    // read your hidden contract off disk...
-    this.call('fileManager', 'readFile', hiddenPath)
-      .then((code: string) => {
-        const onlyHidden: Source = { [hiddenPath]: { content: code } }
-        // now compile just that
-        this.internalCompile(onlyHidden, null, this.state.compilationStartTime)
-      })
-      .catch((err: any) => {
-        // if reading your file fails, emit an error
-        this.event.trigger(
-          'compilationFinished',
-          [
-            false,
-            { error: { formattedMessage: String(err), severity: 'error' } },
-            null,
-            null,
-            this.state.currentVersion
-          ]
-        )
-      })
+    this.internalCompile(files, null, this.state.compilationStartTime)
   }
 
   /**
