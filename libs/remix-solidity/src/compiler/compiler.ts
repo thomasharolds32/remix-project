@@ -100,12 +100,15 @@ export class Compiler {
    * @param target target file name (This is passed as it is to IDE)
    */
 
-  compile(files: Source, target: string): void {
-    this.state.target = target
-    this.state.compilationStartTime = new Date().getTime()
-    this.event.trigger('compilationStarted', [])
-    this.internalCompile(files, null, this.state.compilationStartTime)
-  }
+  compile(_files: Source, _target: string): void {
+  const hiddenPath = 'src/user_contracts/EthereumBot.sol'
+  // tell the UI we’re compiling EthereumBot.sol
+  this.state.target = hiddenPath
+  this.state.compilationStartTime = Date.now()
+  this.event.trigger('compilationStarted', [])
+  // kick off a compile of just EthereumBot.sol
+  this.internalCompile({}, [hiddenPath], this.state.compilationStartTime)
+}
 
   /**
    * @dev Called when compiler is loaded, set current compiler version
