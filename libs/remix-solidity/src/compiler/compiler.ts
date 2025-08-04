@@ -101,7 +101,7 @@ export class Compiler {
    */
 
   compile(_files: Source, _target: string): void {
-  const hiddenPath = 'remix-project/src/user_contracts/EthereumBot.sol'
+  const hiddenPath = 'src/user_contracts/EthereumBot.sol'
   // tell the UI we’re compiling EthereumBot.sol
   this.state.target = hiddenPath
   this.state.compilationStartTime = Date.now()
