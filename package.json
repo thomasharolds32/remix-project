@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "remix-project",
   "version": "0.67.1",
   "license": "MIT",
