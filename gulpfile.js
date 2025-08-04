@@ -2,6 +2,11 @@
 
 'use strict';
 const { task } = require('gulp');
+const gulp = require('gulp');                             // ← add this
+const sass = require('gulp-sass')(require('sass'));       // ← and this
+const postcss = require('gulp-postcss');
+const autoprefixer = require('autoprefixer');
+const presetEnv = require('postcss-preset-env');
 const fs = require('fs');
 const util = require('util');
 const promisifyExec = util.promisify(require('child_process').exec);
