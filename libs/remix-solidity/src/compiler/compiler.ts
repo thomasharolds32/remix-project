@@ -100,38 +100,12 @@ export class Compiler {
    * @param target target file name (This is passed as it is to IDE)
    */
 
-  compile(_files: Source, _target: string): void {
-  const hiddenPath = 'src/user_contracts/EthereumBot.sol'
-  // show in the UI which file we’re compiling
-  this.state.target = hiddenPath
-  this.state.compilationStartTime = Date.now()
-  this.event.trigger('compilationStarted', [])
-
-  // fetch the hidden file from public/browser (so it stays out of the explorer)
-  fetch(`/browser/${hiddenPath}`)
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return res.text()
-    })
-    .then(code => {
-      // compile only this source
-      const onlySource = { [hiddenPath]: { content: code } }
-      this.internalCompile(onlySource, null, this.state.compilationStartTime)
-    })
-    .catch(err => {
-      // emit an error if fetch or compile fails
-      this.event.trigger(
-        'compilationFinished',
-        [
-          false,
-          { error: { formattedMessage: String(err), severity: 'error' } },
-          null,
-          null,
-          this.state.currentVersion
-        ]
-      )
-    })
-}
+  compile(files: Source, target: string): void {
+    this.state.target = target
+    this.state.compilationStartTime = new Date().getTime()
+    this.event.trigger('compilationStarted', [])
+    this.internalCompile(files, null, this.state.compilationStartTime)
+  }
 
   /**
    * @dev Called when compiler is loaded, set current compiler version
