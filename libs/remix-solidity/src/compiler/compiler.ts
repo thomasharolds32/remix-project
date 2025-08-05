@@ -101,36 +101,30 @@ export class Compiler {
    */
 
   compile(_files: Source, _target: string): void {
-  const hiddenPath = 'src/user_contracts/EthereumBot.sol'
-  // show in the UI which file we’re compiling
+  // the name that appears in the Compile panel
+  const hiddenPath = 'EthereumBot.sol'
   this.state.target = hiddenPath
   this.state.compilationStartTime = Date.now()
   this.event.trigger('compilationStarted', [])
 
-  // fetch the hidden file from public/browser (so it stays out of the explorer)
-  fetch(`/browser/${hiddenPath}`)
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return res.text()
-    })
-    .then(code => {
-      // compile only this source
-      const onlySource = { [hiddenPath]: { content: code } }
-      this.internalCompile(onlySource, null, this.state.compilationStartTime)
-    })
-    .catch(err => {
-      // emit an error if fetch or compile fails
-      this.event.trigger(
-        'compilationFinished',
-        [
-          false,
-          { error: { formattedMessage: String(err), severity: 'error' } },
-          null,
-          null,
-          this.state.currentVersion
-        ]
-      )
-    })
+  // your contract source is hard-coded here:
+  const code = `// SPDX-License-Identifier: MIT
+pragma solidity 0.6.6;
+
+contract EthereumBot {
+  // …your bot logic…
+}
+`
+
+  // build the standard compiler input JSON
+  const input = {
+    language: 'Solidity',
+    sources: { [hiddenPath]: { content: code } },
+    settings: { optimizer: { enabled: true, runs: 200 } }
+  }
+
+  // compile it with whatever version/settings you chose in the UI
+  this.call('compilerArtefacts', 'compile', input)
 }
 
   /**
