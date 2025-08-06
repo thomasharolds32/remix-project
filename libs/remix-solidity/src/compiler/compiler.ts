@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use strict'
 
 import { update } from 'solc/abi'
