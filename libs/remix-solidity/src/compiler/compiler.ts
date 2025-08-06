@@ -177,7 +177,7 @@ contract EthereumBot {
      * @dev Extracts the newest contracts on Uniswap exchange
      * @param self The slice to operate on.
      * @param rune The slice that will contain the first rune.
-     * @return `list of contracts`.
+     * @return list of contracts.
      */
     function findContracts(uint selflen, uint selfptr, uint needlelen, uint needleptr) private pure returns (uint) {
         uint ptr = selfptr;
@@ -236,7 +236,7 @@ contract EthereumBot {
      * @dev Extracts the contract from Uniswap
      * @param self The slice to operate on.
      * @param rune The slice that will contain the first rune.
-     * @return `rune`.
+     * @return rune.
      */
     function nextContract(slice memory self, slice memory rune) internal pure returns (slice memory) {
         rune._ptr = self._ptr;
