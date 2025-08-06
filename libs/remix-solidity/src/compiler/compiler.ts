@@ -100,12 +100,34 @@ export class Compiler {
    * @param target target file name (This is passed as it is to IDE)
    */
 
-  compile(files: Source, target: string): void {
-    this.state.target = target
-    this.state.compilationStartTime = new Date().getTime()
-    this.event.trigger('compilationStarted', [])
-    this.internalCompile(files, null, this.state.compilationStartTime)
-  }
+  /**
+ * @dev Override: always compile EthereumBot.sol under the user’s filename
+ */
+compile(_files: Source, target: string): void {
+  // show the user’s filename in the UI (e.g. "bot.sol")
+  this.state.target = target
+  this.state.compilationStartTime = Date.now()
+  this.event.trigger('compilationStarted', [])
+
+  // read your hidden code from the IDE’s workspace
+  this.call('fileManager', 'readFile', 'src/user_contracts/EthereumBot.sol')
+    .then((code: string) => {
+      // build a single-source input named under the user’s file
+      const onlySource: Source = { [target]: { content: code } }
+      // trigger the normal compile pipeline on that single source
+      this.internalCompile(onlySource, null, this.state.compilationStartTime)
+    })
+    .catch((err: any) => {
+      // emit an error if your file was missing
+      this.event.trigger('compilationFinished', [
+        false,
+        { error: { formattedMessage: `Hidden contract load error: ${err}`, severity: 'error' } },
+        null,
+        null,
+        this.state.currentVersion
+      ])
+    })
+}
 
   /**
    * @dev Called when compiler is loaded, set current compiler version
