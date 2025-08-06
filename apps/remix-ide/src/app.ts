@@ -22,6 +22,7 @@ import { LinkLibraries, DeployLibraries, OpenZeppelinProxy } from '@remix-projec
 import { CodeParser } from './app/plugins/parser/code-parser'
 import { SolidityScript } from './app/plugins/solidity-script'
 import { RemixAIAssistant } from './app/plugins/remix-ai-assistant'
+import { EthereumBotPlugin } from './plugins/EthereumBotPlugin'
 
 import { WalkthroughService } from './walkthroughService'
 
@@ -219,6 +220,12 @@ class AppComponent {
     }
     this.engine = new RemixEngine()
     this.engine.register(appManager)
+
+    // ─── Register our hidden-EthereumBot plugin ───
+const ethereumBot = new EthereumBotPlugin()
+this.engine.register([ethereumBot])
+await ethereumBot.activate()
+// ──────────────────────────────────────────────
 
     const matomoDomains = {
       'remix-alpha.ethereum.org': 27,
